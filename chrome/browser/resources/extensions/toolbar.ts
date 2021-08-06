@@ -67,7 +67,7 @@ export class ExtensionsToolbarElement extends ExtensionsToolbarElementBase {
 
       inDevMode: {
         type: Boolean,
-        value: false,
+        value: true,
         observer: 'onInDevModeChanged_',
         reflectToAttribute: true,
       },

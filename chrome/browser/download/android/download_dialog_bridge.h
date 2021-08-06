@@ -15,6 +15,8 @@
 #include "net/base/network_change_notifier.h"
 #include "ui/gfx/native_widget_types.h"
 
+#include "components/download/public/common/download_item.h"
+
 // Contains all the user selection from download dialogs.
 struct DownloadDialogResult {
   DownloadDialogResult();

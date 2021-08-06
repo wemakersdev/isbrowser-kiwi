@@ -93,7 +93,7 @@ class UrlBarMediator implements UrlBar.UrlBarTextContextMenuDelegate, UrlBar.Url
      */
     public boolean setUrlBarData(
             UrlBarData data, @ScrollType int scrollType, @SelectionState int selectionState) {
-        if (data.originEndIndex == data.originStartIndex) {
+        if (data != null && data.url != null && data.originEndIndex == data.originStartIndex) {
             scrollType = UrlBar.ScrollType.SCROLL_TO_BEGINNING;
         }
 
@@ -125,6 +125,8 @@ class UrlBarMediator implements UrlBar.UrlBarTextContextMenuDelegate, UrlBar.Url
     }
 
     private void pushTextToModel() {
+        if (mUrlBarData == null)
+          return;
         CharSequence text =
                 !mHasFocus ? mUrlBarData.displayText : mUrlBarData.getEditingOrDisplayText();
         CharSequence textForAutofillServices = text;

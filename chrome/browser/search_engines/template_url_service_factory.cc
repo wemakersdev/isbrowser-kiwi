@@ -27,6 +27,7 @@
 #include "components/search_engines/enterprise_site_search_manager.h"
 #include "components/search_engines/search_engines_pref_names.h"
 #include "components/search_engines/template_url_service.h"
+#include "content/public/browser/storage_partition.h"
 #include "rlz/buildflags/buildflags.h"
 
 #if BUILDFLAG(IS_CHROMEOS_ASH)

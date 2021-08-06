@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.chromium.chrome.browser.homepage.HomepageManager;
+
 /**
  * A mediator for the TabGridDialog component, responsible for communicating
  * with the components' coordinator as well as managing the business logic

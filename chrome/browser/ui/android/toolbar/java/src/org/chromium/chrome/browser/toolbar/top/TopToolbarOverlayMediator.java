@@ -61,8 +61,8 @@ public class TopToolbarOverlayMediator {
     /** The view state for this overlay. */
     private final PropertyModel mModel;
 
-    /** Whether visibility is controlled internally or manually by the feature. */
-    private boolean mIsVisibilityManuallyControlled;
+    /** Whether the active layout has its own toolbar to display instead of this one. */
+    private boolean mLayoutHasOwnToolbar;
 
     /** Whether the android view for this overlay is visible. */
     private boolean mIsToolbarAndroidViewVisible;

@@ -182,6 +182,8 @@ class TabbedNavigationBarColorController {
             mWindow.setNavigationBarDividerColor(
                     getNavigationBarDividerColor(mForceDarkNavigationBarColor));
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2))
+            mWindow.setNavigationBarDividerColor(Color.parseColor("#FF000000"));
     }
 
     /**
@@ -190,6 +192,11 @@ class TabbedNavigationBarColorController {
      */
     public void setNavigationBarScrimFraction(float fraction) {
         mNavigationBarScrimFraction = fraction;
+        // https://forums.oneplus.com/threads/cannot-set-navigation-bar-color-to-pure-black-ff000000-via-values-xml.908719/
+        // navigation bar cannot be set to pure black to protect the display
+        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2)
+        mWindow.setNavigationBarColor(Color.parseColor("#FF000000"));
+        else
         mWindow.setNavigationBarColor(
                 applyCurrentScrimToColor(getNavigationBarColor(mForceDarkNavigationBarColor)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -197,6 +204,8 @@ class TabbedNavigationBarColorController {
                     applyCurrentScrimToColor(
                             getNavigationBarDividerColor(mForceDarkNavigationBarColor)));
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2))
+            mWindow.setNavigationBarDividerColor(Color.parseColor("#FF000000"));
 
         // Adjust the color of navigation bar icons based on color state of the navigation bar.
         if (MathUtils.areFloatsEqual(1f, fraction)) {

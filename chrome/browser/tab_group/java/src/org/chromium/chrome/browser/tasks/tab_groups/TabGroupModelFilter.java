@@ -1088,6 +1088,11 @@ public class TabGroupModelFilter extends TabModelFilter {
      * @return count of @{@link TabGroup}s in model.
      */
     @Override
+    public int getLastNonExtensionActiveIndex() {
+        return mCurrentGroupIndex;
+    }
+
+    @Override
     public int getCount() {
         return mGroupIdToGroupMap.size();
     }

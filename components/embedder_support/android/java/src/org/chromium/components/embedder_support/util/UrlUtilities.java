@@ -116,6 +116,12 @@ public class UrlUtilities {
      * @return Whether the URL's scheme is for a internal chrome page.
      */
     public static boolean isInternalScheme(@NonNull GURL gurl) {
+        if ("local-ntp".equals(gurl.getHost()))
+          return true;
+        if (gurl.getSpec().startsWith("chrome-search://"))
+          return true;
+        if (gurl.getSpec().startsWith("kiwi-search://"))
+          return true;
         return INTERNAL_SCHEMES.contains(gurl.getScheme());
     }
 
@@ -276,6 +282,12 @@ public class UrlUtilities {
      */
     public static boolean isNtpUrl(GURL gurl) {
         if (!gurl.isValid() || !isInternalScheme(gurl)) return false;
+        if ("local-ntp".equals(gurl.getHost()))
+          return true;
+        if (gurl.getSpec().startsWith("chrome-search://"))
+          return true;
+        if (gurl.getSpec().startsWith("kiwi-search://"))
+          return true;
         return UrlConstants.NTP_HOST.equals(gurl.getHost());
     }
 
@@ -315,7 +327,13 @@ public class UrlUtilities {
         if (LibraryLoader.getInstance().isInitialized()) return isNtpUrl(url);
         return TextUtils.equals(url, UrlConstants.NTP_URL)
                 || TextUtils.equals(url, UrlConstants.NTP_NON_NATIVE_URL)
-                || TextUtils.equals(url, UrlConstants.NTP_ABOUT_URL);
+                || TextUtils.equals(url, UrlConstants.NTP_ABOUT_URL)
+                || TextUtils.equals(url, "chrome-search://local-ntp/local-ntp.html")
+                || TextUtils.equals(url, "chrome-search://local-ntp/incognito-ntp.html")
+                || TextUtils.equals(url, "chrome-search://local-ntp/new-ntp.html")
+                || TextUtils.equals(url, "kiwi-search://local-ntp/local-ntp.html")
+                || TextUtils.equals(url, "kiwi-search://local-ntp/incognito-ntp.html")
+                || TextUtils.equals(url, "kiwi-search://local-ntp/new-ntp.html");
     }
 
     public static String extractPublisherFromPublisherUrl(GURL publisherUrl) {

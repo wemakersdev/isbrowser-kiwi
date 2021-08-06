@@ -63,10 +63,13 @@ import org.chromium.ui.modelutil.MVCListAdapter.ModelList;
 import org.chromium.ui.modelutil.PropertyModel;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 import org.chromium.url.GURL;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.net.URLEncoder;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
 
 /** Handles updating the model state for the currently visible omnibox suggestions. */
 class AutocompleteMediator

@@ -26,6 +26,7 @@ import java.util.Locale;
 public class TabSwitcherDrawable extends TintedDrawable {
     private final float mSingleDigitTextSize;
     private final float mDoubleDigitTextSize;
+    private final float mTripleDigitTextSize;
 
     private final Rect mTextBounds = new Rect();
     private final TextPaint mTextPaint;
@@ -56,6 +57,8 @@ public class TabSwitcherDrawable extends TintedDrawable {
                 context.getResources().getDimension(R.dimen.toolbar_tab_count_text_size_1_digit);
         mDoubleDigitTextSize =
                 context.getResources().getDimension(R.dimen.toolbar_tab_count_text_size_2_digit);
+        mTripleDigitTextSize =
+                context.getResources().getDimension(R.dimen.toolbar_tab_count_text_size_3_digit);
 
         mTextPaint = new TextPaint();
         mTextPaint.setAntiAlias(true);
@@ -107,6 +110,7 @@ public class TabSwitcherDrawable extends TintedDrawable {
         mTabCount = tabCount;
         mIncognito = incognito;
         float textSizePx = mTabCount > 9 ? mDoubleDigitTextSize : mSingleDigitTextSize;
+        textSizePx = mTabCount > 99 ? mTripleDigitTextSize : textSizePx;
         mTextPaint.setTextSize(textSizePx);
         invalidateSelf();
     }
@@ -114,7 +118,7 @@ public class TabSwitcherDrawable extends TintedDrawable {
     private String getTabCountString() {
         if (mTabCount <= 0) {
             return "";
-        } else if (mTabCount > 99) {
+        } else if (mTabCount > 999) {
             return mIncognito ? ";)" : ":D";
         } else {
             return String.format(Locale.getDefault(), "%d", mTabCount);
