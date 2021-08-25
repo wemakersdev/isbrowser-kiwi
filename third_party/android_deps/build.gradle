@@ -6,14 +6,12 @@ apply plugin: ChromiumPlugin
 
 buildscript {
     repositories {
-        google()
         maven {
             url 'https://plugins.gradle.org/m2/'
         }
     }
     dependencies {
         classpath 'org.owasp:dependency-check-gradle:6+'
-        classpath 'com.google.gms:google-services:4.3.2'
     }
 }
 
@@ -26,7 +24,7 @@ repositories {
 
 dependencyCheck {
     // Any known vulnerability of any severity will cause the build to fail.
-    failBuildOnCVSS = 11
+    failBuildOnCVSS = 0
     suppressionFile = file('vulnerability_supressions.xml')
     // Libraries used in these configurations aren't shipped in Chrome.
     // They are only used to aid in compiling or testing.
@@ -197,5 +195,5 @@ task setUpRepository(type: BuildConfigGenerator) {
     repositoryPath 'third_party/android_deps'
     chromiumSourceRoot '../..'
     cipdBucket 'chromium'
-    internalTargetVisibility = [ ':*', '//base:base_java', '//chrome/android:*', '//third_party/androidx:*' ]
+    internalTargetVisibility = [ ':*', '//third_party/androidx:*' ]
 }
