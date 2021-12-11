@@ -50,7 +50,8 @@ class DownloadDialogBridge {
       DownloadLocationDialogType dialog_type,
       const base::FilePath& suggested_path,
       bool is_incognito,
-      DialogCallback dialog_callback);
+      DialogCallback dialog_callback,
+      download::DownloadItem* download);
 
   void OnComplete(JNIEnv* env,
                   const base::android::JavaParamRef<jobject>& obj,
