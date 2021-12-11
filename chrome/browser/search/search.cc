@@ -320,6 +320,8 @@ GURL GetNewTabPageURL(Profile* profile) {
 #if !BUILDFLAG(IS_ANDROID)
 
 bool ShouldAssignURLToInstantRenderer(const GURL& url, Profile* profile) {
+  if (url.SchemeIs(chrome::kChromeSearchScheme))
+    return true;
   if (!url.is_valid() || !profile || !IsInstantExtendedAPIEnabled() ||
       url.SchemeIs(content::kChromeUIScheme)) {
     return false;
@@ -332,7 +334,7 @@ bool ShouldAssignURLToInstantRenderer(const GURL& url, Profile* profile) {
 bool ShouldUseProcessPerSiteForInstantSiteURL(const GURL& site_url,
                                               Profile* profile) {
   return ShouldAssignURLToInstantRenderer(site_url, profile) &&
-         site_url.host_piece() == chrome::kChromeSearchRemoteNtpHost;
+         (site_url.host_piece() == chrome::kChromeSearchRemoteNtpHost || site_url.host_piece() == "local-ntp");
 }
 
 GURL GetEffectiveURLForInstant(const GURL& url, Profile* profile) {
