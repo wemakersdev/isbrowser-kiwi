@@ -89,6 +89,7 @@ import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.base.ViewUtils;
 import org.chromium.ui.interpolators.Interpolators;
 import org.chromium.ui.util.ColorUtils;
+import org.chromium.ui.util.TokenHolder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -243,6 +244,9 @@ public class ToolbarPhone extends ToolbarLayout
 
     /** Whether the toolbar has a pending request to call {@link triggerUrlFocusAnimation()}. */
     private boolean mPendingTriggerUrlFocusRequest;
+    private ToolbarSnapshotState mToolbarSnapshotState;
+    private ButtonData mButtonData;
+    private int mTabCount;
 
     private PhoneCaptureStateToken mPhoneCaptureStateToken;
     private ButtonData mButtonData;
@@ -2748,6 +2752,12 @@ public class ToolbarPhone extends ToolbarLayout
             mHomeButton.setAccessibilityTraversalBefore(View.NO_ID);
         }
 
+        if (newVisualState == VisualState.NEW_TAB_NORMAL && mHomeButton != null) {
+            mHomeButton.setAccessibilityTraversalBefore(R.id.toolbar_buttons);
+        } else {
+            mHomeButton.setAccessibilityTraversalBefore(View.NO_ID);
+        }
+
         // If we are navigating to or from a brand color, allow the transition animation
         // to run to completion as it will handle the triggering this path again and committing
         // the proper visual state when it finishes.  Brand color transitions are only valid
@@ -3200,5 +3210,12 @@ public class ToolbarPhone extends ToolbarLayout
 
     void setNtpSearchBoxScrollFractionForTesting(float ntpSearchBoxScrollFraction) {
         mNtpSearchBoxScrollFraction = ntpSearchBoxScrollFraction;
+    }
+
+    @Override
+    @VisibleForTesting
+    public boolean isAnimationRunningForTesting() {
+        return mUrlFocusChangeInProgress || mBrandColorTransitionActive
+                || mOptionalButtonAnimationRunning;
     }
 }

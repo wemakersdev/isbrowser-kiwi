@@ -54,7 +54,6 @@ import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.base.supplier.LazyOneshotSupplier;
 import org.chromium.base.supplier.ObservableSupplierImpl;
 import org.chromium.base.supplier.OneShotCallback;
-import org.chromium.base.supplier.OneshotSupplier;
 import org.chromium.base.supplier.OneshotSupplierImpl;
 import org.chromium.base.supplier.Supplier;
 import org.chromium.base.supplier.UnownedUserDataSupplier;
@@ -376,6 +375,9 @@ public class ChromeTabbedActivity extends ChromeActivity<ChromeActivityComponent
 
     /** Whether the StartSurface is shown when Chrome is launched. */
     private boolean mOverviewShownOnStart;
+    // Whether the activity is staring from a resumption. False if the activity is starting from
+    // onCreate(), a cold startup.
+    private boolean mFromResumption;
 
     // Whether the activity is staring from a resumption. False if the activity is starting from
     // onCreate(), a cold startup.
@@ -407,6 +409,12 @@ public class ChromeTabbedActivity extends ChromeActivity<ChromeActivityComponent
     private TabbedModeTabDelegateFactory mTabDelegateFactory;
 
     private final AppLaunchDrawBlocker mAppLaunchDrawBlocker;
+    private NotificationPermissionController mNotificationPermissionController;
+
+    private ReturnToChromeBackPressHandler mReturnToChromeBackPressHandler;
+    private ReadingListBackPressHandler mReadingListBackPressHandler;
+    private TabSwitcherBackPressHandler mTabSwitcherBackPressHandler;
+    private MinimizeAppAndCloseTabBackPressHandler mMinimizeAppAndCloseTabBackPressHandler;
 
     private ReturnToChromeBackPressHandler mReturnToChromeBackPressHandler;
 
@@ -723,6 +731,23 @@ public class ChromeTabbedActivity extends ChromeActivity<ChromeActivityComponent
                     };
         } finally {
             TraceEvent.end("ChromeTabbedActivity.initializeCompositor");
+        }
+    }
+
+    private void openTabletTabSwitcherIfNoTabs() {
+        if (!isTablet() || mLayoutManager == null
+                || !mTabModelOrchestrator.areTabModelsInitialized()) {
+            return;
+        }
+
+        boolean gridTabSwitcherEnabled = TabUiFeatureUtilities.isTabletGridTabSwitcherEnabled(this);
+        boolean overviewVisible = mLayoutManager.isLayoutVisible(LayoutType.TAB_SWITCHER);
+        boolean hasNextTab = !(getTabModelSelector().getTotalTabCount() == 0
+                || (!getTabModelSelector().isIncognitoSelected()
+                        && getTabModelSelector().getModel(false).getCount() == 0));
+
+        if (gridTabSwitcherEnabled && !overviewVisible && !hasNextTab) {
+            mLayoutManager.showLayout(LayoutType.TAB_SWITCHER, false);
         }
     }
 
@@ -1567,6 +1592,10 @@ public class ChromeTabbedActivity extends ChromeActivity<ChromeActivityComponent
             super.initializeState();
             Log.i(TAG, "#initializeState");
             Intent intent = getIntent();
+            // Don't remove this line as this is used to unblock the app draw. Setting this
+            // supplier is very important.
+            mSavedInstanceStateSupplier.set(
+                    getSavedInstanceState() != null ? getSavedInstanceState() : new Bundle());
 
             boolean hadCipherData =
                     CipherFactory.getInstance().restoreFromBundle(getSavedInstanceState());
@@ -3711,6 +3740,37 @@ public class ChromeTabbedActivity extends ChromeActivity<ChromeActivityComponent
 
     private boolean shouldShowOverviewPageOnStart() {
         return shouldShowOverviewPageOnStart(getIntent());
+    }
+
+    private void returnToOverviewModeOnBackPressed() {
+        Tab currentTab = getActivityTab();
+        assert currentTab != null;
+
+        // If current tab is an incognito one, we need to change tab model to non-incognito for
+        // showing non-incognito start surface homepage.
+        if (currentTab.isIncognito()) mTabModelSelector.selectModel(/*incognito=*/false);
+
+        if (StartSurfaceUserData.getKeepTab(currentTab)
+                || StartSurfaceUserData.isOpenedFromStart(currentTab)) {
+            // If the current tab is created from the start surface with the keepTab property,
+            // shows the Start surface non-incognito homepage to prevent a loop between the
+            // current tab and previous overview mode. Once in the Start surface, it will close
+            // Chrome if back button is tapped again.
+            showOverview(StartSurfaceState.SHOWING_HOMEPAGE);
+            ReturnToChromeUtil.recordBackNavigationToStart("FromTab");
+        } else {
+            // Otherwise, clicking the back button should go back to the previous overview mode.
+            showOverview(StartSurfaceState.SHOWING_PREVIOUS);
+        }
+
+        if (currentTab.isClosing()) return;
+        // If current tab is incognito, or it shouldn't be kept and it's not from restore, close
+        // the tab.
+        if (currentTab.isIncognito()
+                || (!StartSurfaceUserData.getKeepTab(currentTab)
+                        && currentTab.getLaunchType() != TabLaunchType.FROM_RESTORE)) {
+            closeTabAfterStartSurfaceLayoutIsShown(currentTab);
+        }
     }
 
     @Override

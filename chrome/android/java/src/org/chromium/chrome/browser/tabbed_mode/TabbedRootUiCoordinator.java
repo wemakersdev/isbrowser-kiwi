@@ -23,6 +23,7 @@ import org.chromium.base.supplier.ObservableSupplier;
 import org.chromium.base.supplier.ObservableSupplierImpl;
 import org.chromium.base.supplier.OneShotCallback;
 import org.chromium.base.supplier.OneshotSupplier;
+import org.chromium.base.supplier.OneshotSupplierImpl;
 import org.chromium.base.supplier.Supplier;
 import org.chromium.base.supplier.SupplierUtils;
 import org.chromium.base.version_info.VersionInfo;
@@ -93,6 +94,8 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.read_later.ReadLaterIPHController;
 import org.chromium.chrome.browser.settings.SettingsLauncherImpl;
 import org.chromium.chrome.browser.share.ShareDelegate;
+import org.chromium.chrome.browser.share.crow.CrowButtonDelegateImpl;
+import org.chromium.chrome.browser.share.crow.CrowIphController;
 import org.chromium.chrome.browser.share.link_to_text.LinkToTextIPHController;
 import org.chromium.chrome.browser.signin.SyncConsentActivityLauncherImpl;
 import org.chromium.chrome.browser.status_indicator.StatusIndicatorCoordinator;
@@ -159,6 +162,7 @@ public class TabbedRootUiCoordinator extends RootUiCoordinator {
     private @Nullable ToolbarButtonInProductHelpController mToolbarButtonInProductHelpController;
     private AddToHomescreenIPHController mAddToHomescreenIPHController;
     private LinkToTextIPHController mLinkToTextIPHController;
+    private CrowIphController mCrowIphController;
     private AddToHomescreenMostVisitedTileClickObserver mAddToHomescreenMostVisitedTileObserver;
     private AppBannerInProductHelpController mAppBannerInProductHelpController;
     private PwaBottomSheetController mPwaBottomSheetController;
@@ -434,6 +438,10 @@ public class TabbedRootUiCoordinator extends RootUiCoordinator {
 
         if (mAppBannerInProductHelpController != null) {
             AppBannerInProductHelpControllerFactory.detach(mAppBannerInProductHelpController);
+        }
+
+        if (mCrowIphController != null) {
+            mCrowIphController.destroy();
         }
 
         if (mPwaBottomSheetController != null) {
@@ -730,6 +738,45 @@ public class TabbedRootUiCoordinator extends RootUiCoordinator {
     }
 
     @Override
+    protected IncognitoReauthCoordinatorFactory getIncognitoReauthCoordinatorFactory() {
+        // TODO(crbug.com/1315676): When the refactor is enabled by default, use
+        // |tabSwitcherCustomView| directly instead of the supplier.
+        OneshotSupplier<TabSwitcherCustomViewManager> tabSwitcherCustomViewSupplier =
+                new OneshotSupplierImpl<>();
+        if (ReturnToChromeUtil.isTabSwitcherOnlyRefactorEnabled(mActivity)
+                && mActivityType == ActivityType.TABBED) {
+            ((OneshotSupplierImpl) tabSwitcherCustomViewSupplier)
+                    .set(mTabSwitcherSupplier.get().getTabSwitcherCustomViewManager());
+        } else {
+            tabSwitcherCustomViewSupplier =
+                    mStartSurfaceSupplier.get().getTabSwitcherCustomViewManagerSupplier();
+        }
+
+        // TODO(crbug.com/1324211, crbug.com/1227656) : Refactor below to remove
+        // IncognitoReauthTopToolbarDelegate and pass TopToolbarInteractabilityManager.
+        IncognitoReauthTopToolbarDelegate incognitoReauthTopToolbarDelegate =
+                new IncognitoReauthTopToolbarDelegate() {
+                    @Override
+                    public int disableNewTabButton() {
+                        return mToolbarManager.getTopToolbarInteractabilityManager()
+                                .disableNewTabButton();
+                    }
+
+                    @Override
+                    public void enableNewTabButton(int clientToken) {
+                        mToolbarManager.getTopToolbarInteractabilityManager().enableNewTabButton(
+                                clientToken);
+                    }
+                };
+
+        return new IncognitoReauthCoordinatorFactory(mActivity, mTabModelSelectorSupplier.get(),
+                mModalDialogManagerSupplier.get(), new IncognitoReauthManager(),
+                new SettingsLauncherImpl(), tabSwitcherCustomViewSupplier,
+                incognitoReauthTopToolbarDelegate, mLayoutManager,
+                /*isTabbedActivity=*/true);
+    }
+
+    @Override
     protected void setLayoutStateProvider(LayoutStateProvider layoutStateProvider) {
         super.setLayoutStateProvider(layoutStateProvider);
         if (mGestureNavLayoutObserver != null) {
@@ -961,6 +1008,9 @@ public class TabbedRootUiCoordinator extends RootUiCoordinator {
                         R.id.add_to_homescreen_id);
         AppBannerInProductHelpControllerFactory.attach(
                 mWindowAndroid, mAppBannerInProductHelpController);
+        mCrowIphController = new CrowIphController(mActivity,
+                mAppMenuCoordinator.getAppMenuHandler(), new CrowButtonDelegateImpl(),
+                mActivityTabProvider, mToolbarManager.getMenuButtonView());
 
         if (!didTriggerPromo
                 && ChromeFeatureList.isEnabled(
@@ -1239,5 +1289,10 @@ public class TabbedRootUiCoordinator extends RootUiCoordinator {
     public static void setDisableTopControlsAnimationsForTesting(boolean disable) {
         sDisableTopControlsAnimationForTesting = disable;
         ResettersForTesting.register(() -> sDisableTopControlsAnimationForTesting = false);
+    }
+
+    @VisibleForTesting
+    public static void setDisableStatusIndicatorAnimationsForTesting(boolean disable) {
+        sDisableStatusIndicatorAnimations = disable;
     }
 }

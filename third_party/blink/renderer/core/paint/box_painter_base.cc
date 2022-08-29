@@ -758,8 +758,7 @@ bool PaintBGColorWithPaintWorklet(const Document& document,
 
   scoped_refptr<Image> paint_worklet_image =
       GetBGColorPaintWorkletImage(document, node, dest_rect.Rect().size());
-  if (!paint_worklet_image)
-    return false;
+  DCHECK(paint_worklet_image);
   gfx::RectF src_rect(dest_rect.Rect().size());
   context.DrawImageRRect(
       *paint_worklet_image, Image::kSyncDecode, ImageAutoDarkMode::Disabled(),

@@ -320,6 +320,10 @@ class AppMenu implements OnItemClickListener, OnKeyListener, AppMenuClickHandler
                         anchorView.getRootView().getLayoutDirection());
         mPopup.setContentView(contentView);
 
+        if (popupHeight + popupPosition[1] > visibleDisplayFrame.bottom) {
+            mPopup.setHeight(visibleDisplayFrame.height());
+        }
+
         try {
             mPopup.showAtLocation(
                     anchorView.getRootView(),

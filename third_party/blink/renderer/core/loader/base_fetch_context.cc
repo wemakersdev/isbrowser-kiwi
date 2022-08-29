@@ -391,6 +391,17 @@ void BaseFetchContext::AddClientHintsIfNecessary(
       SetHttpHeader(WebClientHintsType::kUAFormFactor,
                     AtomicString(ua->SerializeFormFactor().c_str()), request);
     }
+
+    if (ShouldSendClientHint(
+            policy, resource_origin, is_1p_origin,
+            network::mojom::blink::WebClientHintsType::kFullUserAgent,
+            hints_preferences)) {
+      request.SetHttpHeaderField(
+          network::GetClientHintToNameMap()
+              .at(network::mojom::blink::WebClientHintsType::kFullUserAgent)
+              .c_str(),
+          SerializeBoolHeader(true));
+    }
   }
 
   if (ShouldSendClientHint(policy, resource_origin, is_1p_origin,
@@ -422,6 +433,18 @@ void BaseFetchContext::AddClientHintsIfNecessary(
       prefers_reduced_transparency.has_value()) {
     SetHttpHeader(WebClientHintsType::kPrefersReducedTransparency,
                   prefers_reduced_transparency.value(), request);
+  }
+
+  if (ShouldSendClientHint(policy, resource_origin, is_1p_origin,
+                           network::mojom::blink::WebClientHintsType::kSaveData,
+                           hints_preferences)) {
+    if (GetNetworkStateNotifier().SaveDataEnabled()) {
+      request.SetHttpHeaderField(
+          network::GetClientHintToNameMap()
+              .at(network::mojom::blink::WebClientHintsType::kSaveData)
+              .c_str(),
+          "on");
+    }
   }
 }
 

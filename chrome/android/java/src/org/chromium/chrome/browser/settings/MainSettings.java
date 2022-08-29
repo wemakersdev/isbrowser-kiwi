@@ -4,6 +4,9 @@
 
 package org.chromium.chrome.browser.settings;
 
+import static org.chromium.chrome.browser.password_manager.PasswordManagerHelper.hasChosenToSyncPasswords;
+import static org.chromium.chrome.browser.password_manager.PasswordManagerHelper.usesUnifiedPasswordManagerUI;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,6 +14,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.SuperscriptSpan;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -449,6 +455,36 @@ public class MainSettings extends ChromeBaseSettingsFragment
         }
     }
 
+    private boolean shouldShowNewLabelForPasswordsPreference() {
+        return usesUnifiedPasswordManagerUI() && hasChosenToSyncPasswords(SyncService.get())
+                && !UserPrefs.get(Profile.getLastUsedRegularProfile())
+                            .getBoolean(Pref.PASSWORDS_PREF_WITH_NEW_LABEL_USED);
+    }
+
+    // TODO(crbug.com/1217070): remove this method once UPM feature is rolled out.
+    // String should be defined in the layout XML.
+    private CharSequence getPasswordsPreferenceElementTitle() {
+        Context context = getContext();
+        if (shouldShowNewLabelForPasswordsPreference()) {
+            // Show the styled "New" text if the user did not accessed the new Password Manager
+            // settings.
+            return SpanApplier.applySpans(context.getString(R.string.password_settings_title_gpm),
+                    new SpanInfo("<new>", "</new>", new SuperscriptSpan(),
+                            new RelativeSizeSpan(0.75f),
+                            new ForegroundColorSpan(
+                                    context.getColor(R.color.default_text_color_blue_baseline))));
+        } else {
+            // Remove the "NEW" text and the trailing whitespace.
+            return (CharSequence) (SpanApplier
+                                           .removeSpanText(
+                                                   context.getString(
+                                                           R.string.password_settings_title_gpm),
+                                                   new SpanInfo("<new>", "</new>"))
+                                           .toString()
+                                           .trim());
+        }
+    }
+
     private void setOnOffSummary(Preference pref, boolean isOn) {
         pref.setSummary(isOn ? R.string.text_on : R.string.text_off);
     }
@@ -495,6 +531,10 @@ public class MainSettings extends ChromeBaseSettingsFragment
                     return UserPrefs.get(getProfile())
                             .isManagedPreference(Pref.CREDENTIALS_ENABLE_SERVICE);
                 }
+                if (usesUnifiedPasswordManagerUI() && PREF_PASSWORDS.equals(preference.getKey())) {
+                    return UserPrefs.get(Profile.getLastUsedRegularProfile())
+                            .isManagedPreference(Pref.CREDENTIALS_ENABLE_SERVICE);
+                }
                 return false;
             }
 
@@ -505,6 +545,9 @@ public class MainSettings extends ChromeBaseSettingsFragment
                             .isDefaultSearchManaged();
                 }
                 if (PREF_PASSWORDS.equals(preference.getKey())) {
+                    return false;
+                }
+                if (usesUnifiedPasswordManagerUI() && PREF_PASSWORDS.equals(preference.getKey())) {
                     return false;
                 }
                 return isPreferenceControlledByPolicy(preference)

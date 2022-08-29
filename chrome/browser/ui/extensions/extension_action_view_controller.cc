@@ -126,6 +126,15 @@ GetHoverCardPolicyState(Browser* browser,
 
 }  // namespace
 
+namespace {
+
+void RecordInvocationSource(
+    ToolbarActionViewController::InvocationSource source) {
+  base::UmaHistogramEnumeration("Extensions.Toolbar.InvocationSource", source);
+}
+
+}  // namespace
+
 // static
 std::unique_ptr<ExtensionActionViewController>
 ExtensionActionViewController::Create(

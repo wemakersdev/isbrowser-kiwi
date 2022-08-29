@@ -36,7 +36,9 @@ import org.chromium.base.supplier.OneshotSupplierImpl;
 import org.chromium.base.supplier.Supplier;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ApplicationLifetime;
+import org.chromium.chrome.browser.BackPressHelper;
 import org.chromium.chrome.browser.ChromeBaseAppCompatActivity;
+import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.LaunchIntentDispatcher;
 import org.chromium.chrome.browser.accessibility.settings.ChromeAccessibilitySettingsDelegate;
 import org.chromium.chrome.browser.autofill.options.AutofillOptionsCoordinator;
@@ -47,6 +49,7 @@ import org.chromium.chrome.browser.back_press.SecondaryActivityBackPressUma.Seco
 import org.chromium.chrome.browser.browsing_data.ClearBrowsingDataFragmentBasic;
 import org.chromium.chrome.browser.feedback.FragmentHelpAndFeedbackLauncher;
 import org.chromium.chrome.browser.feedback.HelpAndFeedbackLauncherImpl;
+import org.chromium.chrome.browser.history.HistoryActivity;
 import org.chromium.chrome.browser.image_descriptions.ImageDescriptionsController;
 import org.chromium.chrome.browser.image_descriptions.ImageDescriptionsSettings;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
@@ -148,6 +151,9 @@ public class SettingsActivity extends ChromeBaseAppCompatActivity
     // This is only used on automotive.
     private @Nullable MissingDeviceLockLauncher mMissingDeviceLockLauncher;
 
+    @Nullable
+    private UiConfig mUiConfig;
+
     @SuppressLint("InlinedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -199,8 +205,36 @@ public class SettingsActivity extends ChromeBaseAppCompatActivity
                     .commit();
         }
 
+        // Set width constraints
+        configureWideDisplayStyle();
         setStatusBarColor();
         initBottomSheet();
+        BackPressHelper.create(this, getOnBackPressedDispatcher(), this::handleBackPressed);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Set width constraints
+        configureWideDisplayStyle();
+    }
+
+    /**
+     * When this layout has a wide display style, it will be width constrained to
+     * {@link UiConfig#WIDE_DISPLAY_STYLE_MIN_WIDTH_DP}. If the current screen width is greater than
+     * UiConfig#WIDE_DISPLAY_STYLE_MIN_WIDTH_DP, the settings layout will be visually centered
+     * by adding padding to both sides.
+     */
+    private void configureWideDisplayStyle() {
+        if (mUiConfig == null) {
+            int minWidePaddingPixels =
+                    getResources().getDimensionPixelSize(R.dimen.settings_wide_display_min_padding);
+            View view = findViewById(R.id.content);
+            mUiConfig = new UiConfig(view);
+            ViewResizer.createAndAttach(view, mUiConfig, 0, minWidePaddingPixels);
+        } else {
+            mUiConfig.updateDisplayStyle();
+        }
     }
 
     @Override

@@ -153,7 +153,7 @@ public class HomepageManager
      */
     public static GURL getDefaultHomepageGurl() {
         if (PartnerBrowserCustomizations.getInstance().isHomepageProviderAvailableAndEnabled()) {
-            return PartnerBrowserCustomizations.getInstance().getHomePageUrl();
+            return PartnerBrowserCustomizations.getInstance().getHomePageUrl().getSpec();
         }
 
         String homepagePartnerDefaultGurlSerialized =

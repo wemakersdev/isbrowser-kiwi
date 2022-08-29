@@ -70,6 +70,7 @@
 #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
 #include "third_party/blink/renderer/core/css/vision_deficiency.h"
 #include "third_party/blink/renderer/core/display_lock/display_lock_utilities.h"
+#include "third_party/blink/renderer/core/document_transition/document_transition_supplement.h"
 #include "third_party/blink/renderer/core/dom/document_lifecycle.h"
 #include "third_party/blink/renderer/core/dom/element.h"
 #include "third_party/blink/renderer/core/dom/element_traversal.h"
@@ -812,6 +813,13 @@ Font StyleEngine::ComputeFont(Element& element,
                               const CSSPropertyValueSet& font_properties) {
   UpdateActiveStyle();
   return GetStyleResolver().ComputeFont(element, font_style, font_properties);
+}
+
+void StyleEngine::ComputeFont(Element& element,
+                              ComputedStyle* font_style,
+                              const CSSPropertyValueSet& font_properties) {
+  UpdateActiveStyle();
+  GetStyleResolver().ComputeFont(element, font_style, font_properties);
 }
 
 RuleSet* StyleEngine::RuleSetForSheet(CSSStyleSheet& sheet) {
@@ -1723,6 +1731,27 @@ void StyleEngine::PseudoStateChangedForElement(
     return;
   }
 
+  if (ShouldSkipInvalidationFor(element))
+    return;
+
+  const RuleFeatureSet& features = GetRuleFeatureSet();
+
+  if (invalidate_ancestors_or_siblings &&
+      RuntimeEnabledFeatures::CSSPseudoHasEnabled() &&
+      features.NeedsHasInvalidationForPseudoStateChange() &&
+      PossiblyAffectingHasState(element)) {
+    if (features.NeedsHasInvalidationForPseudoClass(pseudo_type)) {
+      InvalidateChangedElementAffectedByLogicalCombinationsInHas(
+          element, /* for_pseudo_change */ true);
+      InvalidateAncestorsOrSiblingsAffectedByHasForPseudoChange(element);
+    }
+  }
+
+  if (!invalidate_descendants_or_siblings ||
+      IsSubtreeAndSiblingsStyleDirty(element)) {
+    return;
+  }
+
   InvalidationLists invalidation_lists;
   features.CollectInvalidationSetsForPseudoClass(invalidation_lists, element,
                                                  pseudo_type);
@@ -2349,6 +2378,23 @@ void StyleEngine::EnsureUAStyleForPseudoElement(PseudoId pseudo_id) {
     global_rule_set_->MarkDirty();
     UpdateActiveStyle();
   }
+}
+
+void StyleEngine::EnsureUAStyleForTransitionPseudos() {
+  if (ua_document_transition_style_)
+    return;
+
+  // Note that we don't need to mark any state dirty for style invalidation
+  // here. This is done externally by the code which invalidates this style
+  // sheet.
+  auto* document_transition =
+      DocumentTransitionSupplement::FromIfExists(GetDocument())
+          ->GetTransition();
+  auto* style_sheet_contents =
+      CSSDefaultStyleSheets::ParseUASheet(document_transition->UAStyleSheet());
+  ua_document_transition_style_ = MakeGarbageCollected<RuleSet>();
+  ua_document_transition_style_->AddRulesFromSheet(
+      style_sheet_contents, CSSDefaultStyleSheets::ScreenEval());
 }
 
 void StyleEngine::EnsureUAStyleForForcedColors() {
@@ -2996,6 +3042,14 @@ void StyleEngine::AddFontPaletteValuesRulesFromSheets(
   }
 }
 
+void StyleEngine::AddFontPaletteValuesRulesFromSheets(
+    const ActiveStyleSheetVector& sheets) {
+  for (const ActiveStyleSheet& active_sheet : sheets) {
+    if (RuleSet* rule_set = active_sheet.second)
+      AddFontPaletteValuesRules(*rule_set);
+  }
+}
+
 bool StyleEngine::AddUserFontFaceRules(const RuleSet& rule_set) {
   if (!font_selector_) {
     return false;
@@ -3533,6 +3587,15 @@ void StyleEngine::RecalcTransitionPseudoStyle() {
       view_transition_names_);
 }
 
+void StyleEngine::RecalcTransitionPseudoStyle() {
+  // TODO(khushalsagar) : This forces a style recalc and layout tree rebuild
+  // for the pseudo element tree each time we do a style recalc phase. See if
+  // we can optimize this to only when the pseudo element tree is dirtied.
+  SelectorFilterRootScope filter_scope(nullptr);
+  document_->documentElement()->RecalcTransitionPseudoTreeStyle(
+      document_transition_tags_);
+}
+
 void StyleEngine::RecalcStyle() {
   RecalcStyle(
       {}, StyleRecalcContext::FromAncestors(style_recalc_root_.RootElement()));
@@ -3659,7 +3722,7 @@ void StyleEngine::UpdateStyleAndLayoutTree() {
     if (NeedsLayoutTreeRebuild()) {
       TRACE_EVENT0("blink,blink_style", "Document::rebuildLayoutTree");
       SCOPED_BLINK_UMA_HISTOGRAM_TIMER_HIGHRES("Style.RebuildLayoutTreeTime");
-      RebuildLayoutTree();
+      RebuildLayoutTree(RebuildTransitionPseudoTree::kYes);
     }
     // Update quotes only if there are any scopes marked dirty.
     if (StyleContainmentScopeTree* tree = GetStyleContainmentScopeTree()) {
