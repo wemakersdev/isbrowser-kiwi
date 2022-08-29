@@ -162,6 +162,11 @@ class TabbedNavigationBarColorController {
         forceDarkNavigation &= !UiUtils.isSystemUiThemingDisabled();
         forceDarkNavigation |= mIsInFullscreen;
 
+        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode()))
+            forceDarkNavigation = true;
+
+        if (mForceDarkNavigationBarColor == forceDarkNavigation) return;
+
         mForceDarkNavigationBarColor = forceDarkNavigation;
         final @ColorInt int navigationBarColor =
                 getNavigationBarColor(mForceDarkNavigationBarColor);
@@ -182,7 +187,7 @@ class TabbedNavigationBarColorController {
             mWindow.setNavigationBarDividerColor(
                     getNavigationBarDividerColor(mForceDarkNavigationBarColor));
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode())))
             mWindow.setNavigationBarDividerColor(Color.parseColor("#FF000000"));
     }
 
@@ -194,7 +199,7 @@ class TabbedNavigationBarColorController {
         mNavigationBarScrimFraction = fraction;
         // https://forums.oneplus.com/threads/cannot-set-navigation-bar-color-to-pure-black-ff000000-via-values-xml.908719/
         // navigation bar cannot be set to pure black to protect the display
-        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2)
+        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode()))
         mWindow.setNavigationBarColor(Color.parseColor("#FF000000"));
         else
         mWindow.setNavigationBarColor(
@@ -204,7 +209,7 @@ class TabbedNavigationBarColorController {
                     applyCurrentScrimToColor(
                             getNavigationBarDividerColor(mForceDarkNavigationBarColor)));
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode())))
             mWindow.setNavigationBarDividerColor(Color.parseColor("#FF000000"));
 
         // Adjust the color of navigation bar icons based on color state of the navigation bar.
@@ -216,13 +221,15 @@ class TabbedNavigationBarColorController {
     }
 
     private @ColorInt int getNavigationBarColor(boolean forceDarkNavigationBar) {
+        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode()))
+            return Color.parseColor("#FF000000");
         return forceDarkNavigationBar
                 ? mContext.getColor(R.color.toolbar_background_primary_dark)
                 : SemanticColorUtils.getBottomSystemNavColor(mWindow.getContext());
     }
 
     private @ColorInt int getNavigationBarDividerColor(boolean forceDarkNavigationBar) {
-        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2)
+        if (ContextUtils.getAppSharedPreferences().getBoolean("darken_websites_enabled", false) || ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 2 || (ContextUtils.getAppSharedPreferences().getInt("ui_theme_setting", 0) == 0 && GlobalNightModeStateProviderHolder.getInstance().isInNightMode()))
             return Color.parseColor("#FF000000");
         return forceDarkNavigationBar
                 ? mContext.getColor(R.color.bottom_system_nav_divider_color_light)

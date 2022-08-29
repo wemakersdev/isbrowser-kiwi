@@ -42,7 +42,7 @@
 #include "ui/base/ui_base_features.h"
 #include "ui/color/color_id.h"
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) || true
 #include "chrome/browser/ui/browser.h"
 #include "components/url_formatter/elide_url.h"
 #include "ui/gfx/text_elider.h"
@@ -620,7 +620,7 @@ bool DownloadUIModel::ShouldPromoteOrigin() const {
   return false;
 }
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) || true
 bool DownloadUIModel::IsCommandEnabled(
     const DownloadCommands* download_commands,
     DownloadCommands::Command command) const {

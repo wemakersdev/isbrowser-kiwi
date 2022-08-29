@@ -58,7 +58,7 @@ bool IsExtensionMenuInRootAppMenu() {
          features::IsChromeRefresh2023();
 }
 
-#if !defined(ANDROID)
+#if !defined(ANDROID) || true
 // Enables "Access Code Cast" UI.
 BASE_FEATURE(kAccessCodeCastUI,
              "AccessCodeCastUI",

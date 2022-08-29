@@ -163,6 +163,7 @@ void ExtensionInstallUIDefault::OnInstallSuccess(
 
   // Extensions aren't enabled by default in incognito so we confirm
   // the install in a normal window.
+#if 0
   Profile* current_profile = profile_->GetOriginalProfile();
   Browser* browser = FindOrCreateVisibleBrowser(current_profile);
   if (extension->is_app()) {
@@ -177,6 +178,7 @@ void ExtensionInstallUIDefault::OnInstallSuccess(
   }
 
   ShowPlatformBubble(extension, browser, *icon);
+#endif
 }
 
 void ExtensionInstallUIDefault::OnInstallFailure(

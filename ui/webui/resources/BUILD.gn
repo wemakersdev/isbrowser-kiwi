@@ -7,6 +7,8 @@ import("//crypto/features.gni")
 import("//ui/webui/resources/include_polymer.gni")
 import("//ui/webui/resources/tools/generate_grd.gni")
 
+include_polymer = true
+
 generate_grd("build_grd") {
   grd_prefix = "webui"
   out_grd = "$target_gen_dir/${grd_prefix}_resources.grd"
@@ -110,7 +112,7 @@ generate_grd("build_grd") {
     grdp_files += [ "$target_gen_dir/cros_styles_resources.grdp" ]
   }
 
-  if (!is_android && !is_ios) {
+  if (!is_android && !is_ios || true) {
     public_deps += [
       "cr_components/color_change_listener:build_grdp",
       "cr_components/page_image_service:build_grdp",

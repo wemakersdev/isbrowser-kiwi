@@ -59,6 +59,13 @@ class AppMenuItemViewBinder {
             Drawable icon = model.get(AppMenuItemProperties.ICON);
             ChromeImageView imageView = (ChromeImageView) view.findViewById(R.id.menu_item_icon);
             imageView.setImageDrawable(icon);
+            CharSequence titleCondensed = model.get(AppMenuItemProperties.TITLE_CONDENSED);
+            if (titleCondensed != null && titleCondensed.toString().contains("Extension: ")) {
+                imageView.setColorFilter(Color.BLACK, PorterDuff.Mode.DST);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            } else {
+                imageView.setColorFilter(null);
+            }
             imageView.setVisibility(icon == null ? View.GONE : View.VISIBLE);
 
             // tint the icon

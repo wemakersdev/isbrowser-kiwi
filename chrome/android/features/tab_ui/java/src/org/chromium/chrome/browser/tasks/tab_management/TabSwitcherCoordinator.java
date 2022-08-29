@@ -61,6 +61,8 @@ import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
 import java.util.List;
 
+import org.chromium.base.ContextUtils;
+
 /**
  * Parent coordinator that is responsible for showing a grid or carousel of tabs for the main
  * TabSwitcher UI.
@@ -137,6 +139,10 @@ public class TabSwitcherCoordinator
             @Nullable OneshotSupplier<LayoutStateProvider> layoutStateProviderSupplier) {
         try (TraceEvent e = TraceEvent.scoped("TabSwitcherCoordinator.constructor")) {
             mActivity = activity;
+            if (ContextUtils.getAppSharedPreferences().getString("active_tabswitcher", "default").equals("list"))
+              mode = TabListCoordinator.TabListMode.LIST;
+            if (ContextUtils.getAppSharedPreferences().getString("active_tabswitcher", "default").equals("classic") || ContextUtils.getAppSharedPreferences().getString("active_tabswitcher", "default").equals("grid"))
+              mode = TabListCoordinator.TabListMode.GRID;
             mMode = mode;
             assert mode != TabListMode.STRIP : "Strip mode not supported for TabSwitcher.";
             mBrowserControlsStateProvider = browserControls;

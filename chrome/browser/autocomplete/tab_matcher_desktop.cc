@@ -86,9 +86,11 @@ bool TabMatcherDesktop::IsTabOpenWithURL(const GURL& url,
       return true;
     }
   }
+#endif
   return false;
 }
 
+#if 0
 std::vector<content::WebContents*> TabMatcherDesktop::GetOpenTabs() const {
   Browser* active_browser = BrowserList::GetInstance()->GetLastActive();
   content::WebContents* active_tab = nullptr;
@@ -109,6 +111,7 @@ std::vector<content::WebContents*> TabMatcherDesktop::GetOpenTabs() const {
   }
   return all_tabs;
 }
+#endif
 
 bool TabMatcherDesktop::IsStrippedURLEqualToWebContentsURL(
     const GURL& stripped_url,

@@ -32,6 +32,8 @@ import android.view.View.OnClickListener;
 import android.view.ViewDebug;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.ViewTreeObserver;
+import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -637,6 +639,40 @@ public class ToolbarPhone extends ToolbarLayout
 +        "d.getElementsByTagName('body')[0].style.height='';"
 +        "_kbOverscroll = false;}}(document));";
         currentTab.getWebContents().evaluateJavaScript(SCRIPT, null);
+        // matching chrome-native://newtab and chrome://newtab and kiwi://newtab
+        if (currentTab.isNativePage() && currentTab.getUrl().getSpec().contains("/newtab")) {
+            View nativeView = currentTab.getView();
+            DisplayAndroid display =
+                    DisplayAndroid.getNonMultiDisplay(ContextUtils.getApplicationContext());
+            int screenHeight = display.getDisplayHeight();
+            int targetHeight = (int)Math.round(screenHeight * 0.42);
+            final View handSpacer = nativeView.findViewWithTag("hand_button_spacer");
+            if (handSpacer != null && handSpacer.getHeight() > 0) {
+                ValueAnimator animator = ValueAnimator.ofInt(handSpacer.getHeight(), 0);
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) handSpacer.getLayoutParams();
+                        params.height = ((Integer) valueAnimator.getAnimatedValue());
+                        handSpacer.setLayoutParams(params);
+                    }
+                });
+                animator.setDuration(500);
+                animator.start();
+            } else if (handSpacer != null) {
+                ValueAnimator animator = ValueAnimator.ofInt(handSpacer.getHeight(), targetHeight);
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) handSpacer.getLayoutParams();
+                        params.height = ((Integer) valueAnimator.getAnimatedValue());
+                        handSpacer.setLayoutParams(params);
+                    }
+                });
+                animator.setDuration(500);
+                animator.start();
+            }
+        }
     }
 
     @Override
@@ -1413,7 +1449,8 @@ public class ToolbarPhone extends ToolbarLayout
         mLocationBar.getPhoneCoordinator().setTranslationX(0);
         if (!mUrlFocusChangeInProgress) {
             mToolbarButtonsContainer.setTranslationY(0);
-            mHomeButton.setTranslationY(0);
+            if (mHomeButton != null) mHomeButton.setTranslationY(0);
+            if (mHandButton != null) mHandButton.setTranslationY(0);
         }
 
         if (!mUrlFocusChangeInProgress && mToolbarShadow != null) {
@@ -1556,7 +1593,8 @@ public class ToolbarPhone extends ToolbarLayout
         int transY = mTabSwitcherState == STATIC_TAB ? Math.min(mNtpSearchBoxTranslation.y, 0) : 0;
 
         mToolbarButtonsContainer.setTranslationY(transY);
-        mHomeButton.setTranslationY(transY);
+        if (mHomeButton != null) mHomeButton.setTranslationY(transY);
+        if (mHandButton != null) mHandButton.setTranslationY(transY);
     }
 
     private void setAncestorsShouldClipChildren(boolean clip) {
@@ -2707,6 +2745,7 @@ public class ToolbarPhone extends ToolbarLayout
      * @return Whether the toolbar shadow should be drawn.
      */
     private boolean shouldDrawShadow() {
+        if (true) return false;
         // TODO(twellington): Move this shadow state information to ToolbarDataProvider and show
         // shadow when incognito NTP is scrolled.
         return mTabSwitcherState == STATIC_TAB

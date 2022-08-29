@@ -72,7 +72,7 @@
 #include "chrome/browser/ui/signin/signin_view_controller.h"
 #endif
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) || true
 #include "base/metrics/histogram_functions.h"
 #include "chrome/browser/signin/identity_manager_factory.h"
 #include "components/signin/public/base/signin_pref_names.h"
@@ -316,6 +316,7 @@ void ShowHistory(Browser* browser, const std::string& host_name) {
     browser->window()->ShowIncognitoHistoryDisclaimerDialog();
     return;
   }
+#endif
 
   base::RecordAction(UserMetricsAction("ShowHistory"));
   GURL url = GURL(kChromeUIHistoryURL);
@@ -356,7 +357,7 @@ void ShowExtensions(Browser* browser,
 }
 
 void ShowHelp(Browser* browser, HelpSource source) {
-  ShowHelpImpl(browser, browser->profile(), source);
+  ShowHelpImpl(browser, NULL, source);
 }
 
 void ShowHelpForProfile(Profile* profile, HelpSource source) {
@@ -458,7 +459,7 @@ void ShowContentSettingsExceptionsForProfile(
 }
 
 void ShowSiteSettings(Browser* browser, const GURL& url) {
-  ShowSiteSettingsImpl(browser, browser->profile(), url);
+  ShowSiteSettingsImpl(browser, NULL, url);
 }
 
 void ShowSiteSettings(Profile* profile, const GURL& url) {
@@ -707,6 +708,7 @@ void ShowWebAppSettingsImpl(Browser* browser,
                             web_app::AppSettingsPageEntryPoint entry_point) {
   base::UmaHistogramEnumeration(
       web_app::kAppSettingsPageEntryPointsHistogramName, entry_point);
+#endif
 
   const GURL link_destination(chrome::kChromeUIWebAppSettingsURL + app_id);
   NavigateParams params(profile, link_destination, ui::PAGE_TRANSITION_TYPED);

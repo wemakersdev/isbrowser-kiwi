@@ -158,7 +158,7 @@ bool IsProfileDeletionAllowed(Profile* profile) {
 #endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
 }
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) || true
 #if !BUILDFLAG(IS_CHROMEOS)
 // Returns true if managed accounts signin are required to create a new profile
 // by policies set in `profile`.

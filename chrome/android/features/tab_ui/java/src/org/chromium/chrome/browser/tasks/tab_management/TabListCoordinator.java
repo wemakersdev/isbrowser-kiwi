@@ -56,6 +56,7 @@ import org.chromium.ui.modelutil.SimpleRecyclerViewAdapter;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 import org.chromium.ui.widget.ViewLookupCachingFrameLayout;
 
+import org.chromium.base.ContextUtils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -112,6 +113,25 @@ public class TabListCoordinator
 
     private @Nullable Runnable mAwaitingLayoutRunnable;
     private int mAwaitingTabId = Tab.INVALID_TAB_ID;
+
+    static class ClassicStyleSwitcher extends RecyclerView.ItemDecoration {
+        @Override
+        public void getItemOffsets(
+                        Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            boolean isPortrait = parent.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
+                            || MultiWindowUtils.getInstance().isInMultiWindowMode((Activity) parent.getContext());
+            int space = (int) Math.ceil(75 * Resources.getSystem().getDisplayMetrics().density); // dp to pixels
+            outRect.left = 0;
+            outRect.right = 0;
+            outRect.top = -space;
+            if (!isPortrait)
+                outRect.top = 0;
+            outRect.bottom = 0;
+            if (parent.getChildAdapterPosition(view) == 0) {
+              outRect.top = 0;
+            }
+        }
+    }
 
     /**
      * Construct a coordinator for UI that shows a list of tabs.
@@ -394,6 +414,8 @@ public class TabListCoordinator
                             }
                         };
                 mRecyclerView.setLayoutManager(gridLayoutManager);
+                if (ContextUtils.getAppSharedPreferences().getString("active_tabswitcher", "default").equals("classic") && componentName != "TabGridDialogInSwitcher" && componentName != "TabGridDialogFromStrip")
+                    mRecyclerView.addItemDecoration(new ClassicStyleSwitcher());
                 mMediator.registerOrientationListener(gridLayoutManager);
                 mMediator.updateSpanCount(
                         gridLayoutManager, context.getResources().getConfiguration().screenWidthDp);

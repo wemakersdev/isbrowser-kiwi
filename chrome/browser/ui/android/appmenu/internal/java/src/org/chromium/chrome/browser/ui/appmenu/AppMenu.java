@@ -32,6 +32,14 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 
 import androidx.annotation.ColorInt;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View.OnTouchListener;
+import android.util.Base64;
+import android.util.Base64InputStream;
+import android.widget.AdapterView;
+
 import androidx.annotation.IdRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -250,6 +258,8 @@ class AppMenu implements OnItemClickListener, OnKeyListener, AppMenuClickHandler
                     isMenuIconAtStart ? R.style.StartIconMenuAnim : R.style.EndIconMenuAnim);
         }
 
+        if (ContextUtils.getAppSharedPreferences().getBoolean("enable_bottom_toolbar", false)) mPopup.setAnimationStyle(R.style.EndIconMenuAnimBottom);
+
         // Turn off window animations for low end devices.
         if (SysUtils.isLowEndDevice()) mPopup.setAnimationStyle(0);
 
@@ -342,16 +352,13 @@ class AppMenu implements OnItemClickListener, OnKeyListener, AppMenuClickHandler
                         anchorView.getRootView().getLayoutDirection());
         mPopup.setContentView(contentView);
 
-        if (popupHeight + popupPosition[1] > visibleDisplayFrame.bottom) {
-            mPopup.setHeight(visibleDisplayFrame.height());
-        }
-
         try {
             mPopup.showAtLocation(
                     anchorView.getRootView(),
                     Gravity.NO_GRAVITY,
                     popupPosition[0],
                     popupPosition[1]);
+        }
         } catch (WindowManager.BadTokenException e) {
             // Intentionally ignore BadTokenException. This can happen in a real edge case where
             // parent.getWindowToken is not valid. See http://crbug.com/826052 &
@@ -632,8 +639,12 @@ class AppMenu implements OnItemClickListener, OnKeyListener, AppMenuClickHandler
                 calculateHeightForItems(
                         menuItemIds, heightList, groupDividerResourceId, availableScreenSpace);
         menuHeight += footerHeight + headerHeight + padding.top + padding.bottom;
-        if (ContextUtils.getAppSharedPreferences().getBoolean("enable_bottom_toolbar", false) && menuItemIds.size() >= 7)
-            menuHeight /= 1.45;
+        if (ContextUtils.getAppSharedPreferences().getBoolean("enable_bottom_toolbar", false) && menuItemIds.size() >= 7) {
+            if (Build.VERSION.SDK_INT < 25)
+              menuHeight /= 1.55;
+            else
+              menuHeight /= 1.45;
+        }
         mPopup.setHeight(menuHeight);
     }
 

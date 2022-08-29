@@ -516,14 +516,15 @@ void ChromeDownloadManagerDelegate::ShowDownloadDialog(
     int64_t total_bytes,
     DownloadLocationDialogType dialog_type,
     const base::FilePath& suggested_path,
-    DownloadDialogBridge::DialogCallback callback) {
+    DownloadDialogBridge::DialogCallback callback,
+    download::DownloadItem* download) {
   DCHECK(download_dialog_bridge_);
   auto connection_type = net::NetworkChangeNotifier::GetConnectionType();
   bool is_incognito = profile_->IsOffTheRecord();
 
   download_dialog_bridge_->ShowDialog(
       native_window, total_bytes, connection_type, dialog_type, suggested_path,
-      is_incognito, std::move(callback));
+      is_incognito, std::move(callback), download);
 }
 
 void ChromeDownloadManagerDelegate::SetDownloadDialogBridgeForTesting(
@@ -1152,6 +1153,7 @@ void ChromeDownloadManagerDelegate::RequestConfirmation(
         return;
       }
 
+      if (false)
       if (!download_prefs_->PromptForDownload()) {
         DuplicateDownloadDialogBridgeDelegate::GetInstance()->CreateDialog(
             download, suggested_path, web_contents, std::move(callback));
@@ -1194,7 +1196,7 @@ void ChromeDownloadManagerDelegate::RequestConfirmation(
     gfx::NativeWindow native_window = web_contents->GetTopLevelNativeWindow();
     ShowDownloadDialog(
         native_window, download->GetTotalBytes(), dialog_type, suggested_path,
-        base::BindOnce(&OnDownloadDialogClosed, std::move(callback)));
+        base::BindOnce(&OnDownloadDialogClosed, std::move(callback)), download);
     return;
 
 #else   // BUILDFLAG(IS_ANDROID)

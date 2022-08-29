@@ -738,6 +738,8 @@ void ChromeContentRendererClient::RenderFrameCreated(
   }
 #endif
 
+
+#if 0
 // We should create CommerceHintAgent only for a main frame except a fenced
 // frame that is the main frame as well, so we should check if |render_frame|
 // is the fenced frame.
@@ -749,6 +751,7 @@ void ChromeContentRendererClient::RenderFrameCreated(
       render_frame->GetWebFrame()->IsOutermostMainFrame()) {
     new cart::CommerceHintAgent(render_frame);
   }
+#endif  // !BUILDFLAG(IS_ANDROID)
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   new SpellCheckProvider(render_frame, spellcheck_.get());
@@ -1465,7 +1468,7 @@ void ChromeContentRendererClient::WillSendRequest(
   if (!url.ProtocolIs(chrome::kChromeSearchScheme))
     return;
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) || true
   SearchBox* search_box =
       SearchBox::Get(content::RenderFrame::FromWebFrame(frame->LocalRoot()));
   if (search_box) {

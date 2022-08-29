@@ -75,6 +75,7 @@ import org.chromium.components.browser_ui.widget.gesture.BackPressHandler;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.modelutil.PropertyModel;
 
+import org.chromium.base.ContextUtils;
 import java.util.List;
 
 /**

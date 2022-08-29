@@ -84,6 +84,17 @@ sk_sp<cc::ColorFilter> GetDarkModeFilterForImageOnMainThread(
   return color_filter;
 }
 
+// TODO(gilmanmh): If grayscaling images in dark mode proves popular among
+// users, consider experimenting with different grayscale algorithms.
+sk_sp<SkColorFilter> MakeGrayscaleFilter(float grayscale_percent) {
+  DCHECK_GE(grayscale_percent, 0.0f);
+  DCHECK_LE(grayscale_percent, 1.0f);
+
+  SkColorMatrix grayscale_matrix;
+  grayscale_matrix.setSaturation(1.0f - grayscale_percent);
+  return SkColorFilters::Matrix(grayscale_matrix);
+}
+
 }  // namespace
 
 // DarkModeInvertedColorCache - Implements cache for inverted colors.
@@ -262,16 +273,6 @@ sk_sp<cc::ColorFilter> DarkModeFilter::GenerateImageFilter(
 sk_sp<cc::ColorFilter> DarkModeFilter::GetImageFilter() const {
   DCHECK(immutable_.image_filter);
   return immutable_.image_filter;
-}
-
-DarkModeFilter::ElementRole DarkModeFilter::BorderElementRole(
-    SkColor border_color,
-    SkColor background_color) {
-  if (background_color == 0 ||
-      DarkModeColorClassifier::CalculateColorBrightness(border_color) <
-          DarkModeColorClassifier::CalculateColorBrightness(background_color))
-    return ElementRole::kForeground;
-  return ElementRole::kBackground;
 }
 
 absl::optional<cc::PaintFlags> DarkModeFilter::ApplyToFlagsIfNeeded(
